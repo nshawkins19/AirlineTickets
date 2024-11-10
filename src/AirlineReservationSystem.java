@@ -14,8 +14,8 @@ public class AirlineReservationSystem extends JFrame implements ActionListener {
 
     public AirlineReservationSystem() {
         // Initialize flights with constructor setting number of seats
-        gos1 = new Flight("GOS 1", "Greensboro", "Newark", "7:00 AM", "9:00 AM", 100);
-        gos2 = new Flight("GOS 2", "Newark", "Greensboro", "5:30 PM", "7:00 PM", 100);
+        gos1 = new Flight("GSO 1", "Greensboro", "Newark", "7:00 AM", "9:00 AM", 100);
+        gos2 = new Flight("GSO 2", "Newark", "Greensboro", "5:30 PM", "7:00 PM", 100);
 
         // Set up GUI
         setTitle("Greensboro Airlines Reservation System");
