@@ -7,15 +7,17 @@ public class AirlineReservationSystem extends JFrame implements ActionListener {
     private JComboBox<String> startingCityBox, destinationCityBox, flightNumberBox, classBox, seatPreferenceBox, snackBox;
     private JComboBox<String> monthBox, dayBox, yearBox, departureTimeBox; // Separate boxes for Month, Day, and Year
     private JButton reserveButton;
-    private JLabel statusLabel;
+    private JLabel statusLabel, seatsRemainingLabel;
 
     // Flights
     private Flight gos1, gos2;
+    //Seat counter
+    private int reservationCount = 0;
 
     public AirlineReservationSystem() {
-        // Initialize flights with constructor setting number of seats
-        gos1 = new Flight("GSO 1", "Greensboro", "Newark", "7:00 AM", "9:00 AM", 100);
-        gos2 = new Flight("GSO 2", "Newark", "Greensboro", "5:30 PM", "7:00 PM", 100);
+        // Initialize flights with constructor  , end int is number of seats
+        gos1 = new Flight("GOS 1", "Greensboro", "Newark", "7:00 AM", "9:00 AM", 3,3);
+        gos2 = new Flight("GOS 2", "Newark", "Greensboro", "5:30 PM", "7:00 PM", 3,3);
 
         // Set up GUI
         setTitle("Greensboro Airlines Reservation System");
@@ -110,6 +112,10 @@ public class AirlineReservationSystem extends JFrame implements ActionListener {
         snackBox.setBounds(150, 350, 200, 25);
         add(snackBox);
 
+        seatsRemainingLabel = new JLabel("Seats Available: " + gos1.getSeatsAvailable());
+        seatsRemainingLabel.setBounds(20, 500, 300, 25);
+        add(seatsRemainingLabel);
+
         reserveButton = new JButton("Reserve Ticket");
         reserveButton.setBounds(20, 380, 330, 25);
         reserveButton.addActionListener(this);
@@ -119,11 +125,14 @@ public class AirlineReservationSystem extends JFrame implements ActionListener {
         statusLabel.setBounds(20, 410, 350, 100);
         add(statusLabel);
 
-        // Initially hide seat preference and snack options for Economy class
-        seatPreferenceLabel.setVisible(false);
+        // Set visibility for seat preference and snack options based on class selection
         seatPreferenceBox.setVisible(false);
-        snackLabel.setVisible(false);
         snackBox.setVisible(false);
+
+        // Update seat availability when user changes flight, starting city, or destination city
+        startingCityBox.addActionListener(this);
+        destinationCityBox.addActionListener(this);
+        flightNumberBox.addActionListener(this);
 
         setVisible(true);
     }
@@ -156,51 +165,96 @@ public class AirlineReservationSystem extends JFrame implements ActionListener {
         if (e.getSource() == classBox) {
             String selectedClass = (String) classBox.getSelectedItem();
             boolean isBusiness = selectedClass.equals("Business");
-            // Show or hide seat preference and snack options based on class
             seatPreferenceBox.setVisible(isBusiness);
             snackBox.setVisible(isBusiness);
         } else if (e.getSource() == reserveButton) {
-            // Gather information
-            String customerName = customerNameField.getText();
-            String startingCity = (String) startingCityBox.getSelectedItem();
-            String destinationCity = (String) destinationCityBox.getSelectedItem();
-            String flightNumber = (String) flightNumberBox.getSelectedItem();
-            String month = (String) monthBox.getSelectedItem();
-            String day = (String) dayBox.getSelectedItem();
-            String year = (String) yearBox.getSelectedItem();
-            String departureTime = (String) departureTimeBox.getSelectedItem();
-            String ticketClass = (String) classBox.getSelectedItem();
+            handleReservation();
+        } else if (e.getSource() instanceof JComboBox<?>) {
+            // Reset counters when any dropdown selection changes except class selection
+            if (e.getSource() != classBox) {
+                String selectedFlight = (String) flightNumberBox.getSelectedItem();
+                Flight currentFlight = selectedFlight.equals("GOS 1") ? gos1 : gos2;
 
-            // Input validation
-            if (customerName.isEmpty()) {
-                statusLabel.setText("Please fill in all required fields.");
-                return;
-            }
+                // Reset only if the cities match the flight route
+                String startCity = (String) startingCityBox.getSelectedItem();
+                String destCity = (String) destinationCityBox.getSelectedItem();
 
-            // Select flight
-            Flight flight = flightNumber.equals("GOS 1") ? gos1 : gos2;
-
-            try {
-                flight.reserveSeat(); // Check seat availability and reserve
-                Ticket ticket;
-                String departureDate = month + "/" + day + "/" + year; // Construct the full date
-
-                if (ticketClass.equals("Economy")) {
-                    ticket = new EconomyTicket(customerName, startingCity, destinationCity, flightNumber, departureDate, departureTime);
+                if (isValidRoute(selectedFlight, startCity, destCity)) {
+                    reservationCount = 0;
+                    currentFlight.resetSeats(); // Add this method to Flight class
+                    seatsRemainingLabel.setText("Seats Available: " + currentFlight.getSeatsAvailable());
+                    statusLabel.setText(""); // Clear any previous status messages
                 } else {
-                    ticket = new BusinessTicket(customerName, startingCity, destinationCity, flightNumber, departureDate, departureTime);
+                    statusLabel.setText("<html>Invalid route. Available routes:<br>GOS 1: Greensboro → Newark<br>GOS 2: Newark → Greensboro</html>");
                 }
-
-                String info = "Ticket reserved for " + customerName + "\n"
-                        + "Departure Date: " + departureDate + "\n"
-                        + "Flight Number: " + flightNumber + "\n"
-                        + "Total Charge: $" + ticket.price;
-                statusLabel.setText("<html>" + info.replaceAll("\n", "<br>") + "</html>");
-            } catch (RuntimeException ex) {
-                statusLabel.setText(ex.getMessage());
             }
         }
     }
+
+    private boolean isValidRoute(String flightNumber, String startCity, String destCity) {
+        if (flightNumber.equals("GOS 1")) {
+            return startCity.equals("Greensboro") && destCity.equals("Newark");
+        } else if (flightNumber.equals("GOS 2")) {
+            return startCity.equals("Newark") && destCity.equals("Greensboro");
+        }
+        return false;
+    }
+
+    private void handleReservation() {
+        // Extract the reservation logic from actionPerformed for better organization
+        String customerName = customerNameField.getText();
+        String startingCity = (String) startingCityBox.getSelectedItem();
+        String destinationCity = (String) destinationCityBox.getSelectedItem();
+        String flightNumber = (String) flightNumberBox.getSelectedItem();
+        String month = (String) monthBox.getSelectedItem();
+        String day = (String) dayBox.getSelectedItem();
+        String year = (String) yearBox.getSelectedItem();
+        String departureTime = (String) departureTimeBox.getSelectedItem();
+        String ticketClass = (String) classBox.getSelectedItem();
+
+        if (customerName.isEmpty()) {
+            statusLabel.setText("Please fill in all required fields.");
+            return;
+        }
+
+        if (!isValidRoute(flightNumber, startingCity, destinationCity)) {
+            statusLabel.setText("<html>Invalid route selected. Please check flight routes.</html>");
+            return;
+        }
+
+        Flight flight = flightNumber.equals("GOS 1") ? gos1 : gos2;
+
+        if (reservationCount >= flight.getSeatsAvailable()) {
+            statusLabel.setText("No more seats available. Please change the flight or other details.");
+            return;
+        }
+
+        try {
+            flight.reserveSeat();
+            reservationCount++;
+            seatsRemainingLabel.setText("Seats Available: " + flight.getSeatsAvailable());
+
+            String departureDate = month + "/" + day + "/" + year;
+            Ticket ticket;
+
+            if (ticketClass.equals("Economy")) {
+                ticket = new EconomyTicket(customerName, startingCity, destinationCity,
+                        flightNumber, departureDate, departureTime);
+            } else {
+                ticket = new BusinessTicket(customerName, startingCity, destinationCity,
+                        flightNumber, departureDate, departureTime);
+            }
+
+            String info = "Ticket reserved for " + customerName + "\n"
+                    + "Departure Date: " + departureDate + "\n"
+                    + "Flight Number: " + flightNumber + "\n"
+                    + "Total Charge: $" + ticket.price;
+            statusLabel.setText("<html>" + info.replaceAll("\n", "<br>") + "</html>");
+        } catch (RuntimeException ex) {
+            statusLabel.setText(ex.getMessage());
+        }
+    }
+
 
     public static void main(String[] args) {
         AirlineReservationSystem app = new AirlineReservationSystem();
