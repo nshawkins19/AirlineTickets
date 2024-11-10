@@ -4,7 +4,7 @@ public class BusinessTicket extends Ticket {
 
     public BusinessTicket(String customerName, String startingCity, String destinationCity, String flightNumber, String departureDate, String departureTime) {
         super(customerName, startingCity, destinationCity, flightNumber, departureDate, departureTime);
-        this.price = 600.0; // 50% more than Economy
+        this.price = 600.0; // Business class costs more
     }
 
     // Overloading reserveTicket (Static Polymorphism)
@@ -19,4 +19,6 @@ public class BusinessTicket extends Ticket {
     public String reserveTicket() {
         return "Business Ticket reserved for " + customerName;
     }
+
+
 }
