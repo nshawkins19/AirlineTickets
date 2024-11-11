@@ -247,7 +247,15 @@ public class AirlineReservationSystem extends JFrame implements ActionListener {
                             flightNumber, departureDate, departureTime);
                     seatReserved = true;
                 } else {
-                    throw new RuntimeException("No economy seats available. Try business class!");
+                    // Check for alternative flights with economy seats
+                    String alternativeTime = findAlternativeFlight(startingCity, destinationCity, ticketClass);
+                    if (alternativeTime != null) {
+                        throw new RuntimeException("<html>No economy seats available on this flight.<br>" +
+                                "Alternative flight available at: " + alternativeTime + "<br>" +
+                                "Please change your flight time to book.</html>");
+                    } else {
+                        throw new RuntimeException("No economy seats available on any flight today. Try business class!");
+                    }
                 }
             } else {
                 if (flight.getAvailableBusinessSeats() > 0) {
@@ -263,7 +271,15 @@ public class AirlineReservationSystem extends JFrame implements ActionListener {
                     ticket = bTicket;
                     seatReserved = true;
                 } else {
-                    throw new RuntimeException("No business seats available. Try economy class!");
+                    // Check for alternative flights with business seats
+                    String alternativeTime = findAlternativeFlight(startingCity, destinationCity, ticketClass);
+                    if (alternativeTime != null) {
+                        throw new RuntimeException("<html>No business seats available on this flight.<br>" +
+                                "Alternative flight available at: " + alternativeTime + "<br>" +
+                                "Please change your flight time to book.</html>");
+                    } else {
+                        throw new RuntimeException("No business seats available on any flight today. Try economy class!");
+                    }
                 }
             }
 
@@ -279,6 +295,41 @@ public class AirlineReservationSystem extends JFrame implements ActionListener {
         } catch (RuntimeException ex) {
             statusLabel.setText(ex.getMessage());
         }
+    }
+
+    /**
+     * Finds an alternative flight on the same route with available seats
+     * @param startCity Starting city
+     * @param destCity Destination city
+     * @param ticketClass Desired ticket class (Economy or Business)
+     * @return Alternative flight time if available, null if no alternatives found
+     */
+    private String findAlternativeFlight(String startCity, String destCity, String ticketClass) {
+        // Check which direction we're going
+        boolean isGreensboroToNewark = startCity.equals("Greensboro") && destCity.equals("Newark");
+        Flight currentFlight = isGreensboroToNewark ? gos1 : gos2;
+
+        // If current flight is GOS 1 (7:00 AM), suggest GOS 2 (5:30 PM) and vice versa
+        if (isGreensboroToNewark) {
+            if (gos2.getStartCity().equals(startCity) &&
+                    gos2.getEndCity().equals(destCity)) {
+                if (ticketClass.equals("Economy") && gos2.getAvailableEconomySeats() > 0) {
+                    return gos2.getDepartureTime();
+                } else if (ticketClass.equals("Business") && gos2.getAvailableBusinessSeats() > 0) {
+                    return gos2.getDepartureTime();
+                }
+            }
+        } else {
+            if (gos1.getStartCity().equals(startCity) &&
+                    gos1.getEndCity().equals(destCity)) {
+                if (ticketClass.equals("Economy") && gos1.getAvailableEconomySeats() > 0) {
+                    return gos1.getDepartureTime();
+                } else if (ticketClass.equals("Business") && gos1.getAvailableBusinessSeats() > 0) {
+                    return gos1.getDepartureTime();
+                }
+            }
+        }
+        return null;
     }
 
     public static void main(String[] args) {
