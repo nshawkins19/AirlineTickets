@@ -1,84 +1,57 @@
 public class Flight {
     private String flightNumber;
-    private String departureCity;
-    private String arrivalCity;
+    private String startCity;
+    private String endCity;
     private String departureTime;
     private String arrivalTime;
-    private int totalSeats;
+    private int economySeats;
+    private int businessSeats;
+    private int availableEconomySeats;
+    private int availableBusinessSeats;
 
-    public int getbSeat() {
-        return bSeat;
-    }
-
-    public void setbSeat(int bSeat) {
-        this.bSeat = bSeat;
-    }
-
-    public int geteSeat() {
-        return eSeat;
-    }
-
-    public void seteSeat(int eSeat) {
-        this.eSeat = eSeat;
-    }
-
-    private int bSeat; //business class seats
-    private int eSeat; //economy class seats
-    private int seatsAvailable;
-
-    public Flight(String flightNumber, String departureCity, String arrivalCity, String departureTime, String arrivalTime, int bSeat, int eSeat) {
+    public Flight(String flightNumber, String startCity, String endCity,
+                  String departureTime, String arrivalTime, int economySeats, int businessSeats) {
         this.flightNumber = flightNumber;
-        this.departureCity = departureCity;
-        this.arrivalCity = arrivalCity;
+        this.startCity = startCity;
+        this.endCity = endCity;
         this.departureTime = departureTime;
         this.arrivalTime = arrivalTime;
-        this.bSeat = bSeat;
-        this.eSeat = eSeat;
-        totalSeats = bSeat +eSeat;
-        this.seatsAvailable = totalSeats;
-        //totalSeats = 1; test code
+        this.economySeats = economySeats;
+        this.businessSeats = businessSeats;
+        this.availableEconomySeats = economySeats;
+        this.availableBusinessSeats = businessSeats;
     }
 
-
-    // Reserve a seat
-    public void reserveSeat() throws RuntimeException {
-        if (seatsAvailable <= 0) {
-            throw new RuntimeException("Sorry, no seats available on this flight.");
+    public boolean reserveEconomySeat() throws RuntimeException {
+        if (availableEconomySeats > 0) {
+            availableEconomySeats--;
+            return true;
         }
-        seatsAvailable--;
+        throw new RuntimeException("No economy seats available");
     }
 
-    // Get the number of seats left
-    public int getSeatsAvailable() {
-        return seatsAvailable;
-    }
-
-    public String getFlightNumber() {
-        return flightNumber;
-    }
-
-    public String getDepartureCity() {
-        return departureCity;
-    }
-
-    public String getArrivalCity() {
-        return arrivalCity;
+    public boolean reserveBusinessSeat() throws RuntimeException {
+        if (availableBusinessSeats > 0) {
+            availableBusinessSeats--;
+            return true;
+        }
+        throw new RuntimeException("No business seats available");
     }
 
     public void resetSeats() {
-        // Reset to original capacity
-        this.seatsAvailable = this.totalSeats;
+        this.availableEconomySeats = this.economySeats;
+        this.availableBusinessSeats = this.businessSeats;
     }
 
-    public String getDepartureTime() {
-        return departureTime;
-    }
+    // Getters for available seats
+    public int getAvailableEconomySeats() { return availableEconomySeats; }
+    public int getAvailableBusinessSeats() { return availableBusinessSeats; }
+    public int getTotalAvailableSeats() { return availableEconomySeats + availableBusinessSeats; }
 
-    public String getArrivalTime() {
-        return arrivalTime;
-    }
-
-    public int getTotalSeats() {
-        return bSeat + eSeat;
-    }
+    // Other getters
+    public String getFlightNumber() { return flightNumber; }
+    public String getStartCity() { return startCity; }
+    public String getEndCity() { return endCity; }
+    public String getDepartureTime() { return departureTime; }
+    public String getArrivalTime() { return arrivalTime; }
 }

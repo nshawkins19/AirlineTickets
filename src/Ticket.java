@@ -1,4 +1,4 @@
-public class Ticket {
+public abstract class Ticket {
     protected String customerName;
     protected String startingCity;
     protected String destinationCity;
@@ -7,19 +7,30 @@ public class Ticket {
     protected String departureTime;
     protected double price;
 
-    // Constructor
-    public Ticket(String customerName, String startingCity, String destinationCity, String flightNumber, String departureDate, String departureTime) {
+    public Ticket(String customerName, String startingCity, String destinationCity,
+                  String flightNumber, String departureDate, String departureTime) {
         this.customerName = customerName;
         this.startingCity = startingCity;
         this.destinationCity = destinationCity;
         this.flightNumber = flightNumber;
         this.departureDate = departureDate;
         this.departureTime = departureTime;
-        this.price = 400.0; // Default price for Economy
     }
 
-    // ReserveTicket method
-    public String reserveTicket() {
-        return "Ticket reserved for " + customerName;
-    }
+    // Abstract method to be implemented by subclasses
+    public abstract String reserveTicket();
+
+    // Getters
+    public String getCustomerName() { return customerName; }
+    public String getStartingCity() { return startingCity; }
+    public String getDestinationCity() { return destinationCity; }
+    public String getFlightNumber() { return flightNumber; }
+    public String getDepartureDate() { return departureDate; }
+    public String getDepartureTime() { return departureTime; }
+    public double getPrice() { return price; }
+
+
+
+
 }
+
