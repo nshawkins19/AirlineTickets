@@ -1,5 +1,7 @@
 import javax.swing.*;
 import java.awt.event.*;
+import java.util.ArrayList;
+import java.util.List;
 
 public class AirlineReservationSystem extends JFrame implements ActionListener {
     // GUI Components
@@ -10,17 +12,22 @@ public class AirlineReservationSystem extends JFrame implements ActionListener {
     private JLabel statusLabel, seatsRemainingLabel;
 
     // Flights
-    private Flight gos1, gos2;
+    private Flight[] greensboroToNewarkFlights;  // Flights from GSO to EWR
+    private Flight[] newarkToGreensboroFlights;  // Flights from EWR to GSO
+
     //Seat counter
     private int reservationCount = 0;
 
     public AirlineReservationSystem() {
+
+
         // Initialize flights with constructor  , end int is number of seats
-        gos1 = new Flight("GOS 1", "Greensboro", "Newark", "7:00 AM", "9:00 AM", 2, 1); // 2 economy, 1 business
-        gos2 = new Flight("GOS 2", "Newark", "Greensboro", "5:30 PM", "7:00 PM", 2, 1); // 2 economy, 1 business
+        initializeFlights();
+
+
         // Set up GUI
         setTitle("Greensboro Airlines Reservation System");
-        setSize(600, 600);
+        setSize(600, 700);
         setDefaultCloseOperation(EXIT_ON_CLOSE);
         setLayout(null);
 
@@ -85,7 +92,9 @@ public class AirlineReservationSystem extends JFrame implements ActionListener {
         JLabel departureTimeLabel = new JLabel("Departure Time:");
         departureTimeLabel.setBounds(20, 250, 120, 25);
         add(departureTimeLabel);
-        departureTimeBox = new JComboBox<>(new String[]{"5:00 AM", "9:00 AM", "4:00 PM", "7:00 PM"});
+        departureTimeBox = new JComboBox<>(new String[]{
+                "5:00 AM", "7:00 AM", "9:00 AM", "4:00 PM", "5:30 PM", "7:00 PM"
+        });
         departureTimeBox.setBounds(150, 250, 200, 25);
         add(departureTimeBox);
 
@@ -111,7 +120,7 @@ public class AirlineReservationSystem extends JFrame implements ActionListener {
         snackBox.setBounds(150, 350, 200, 25);
         add(snackBox);
 
-        seatsRemainingLabel = new JLabel("Seats Available: " + gos1.getTotalAvailableSeats());
+        seatsRemainingLabel = new JLabel("Seats Available: " + getCurrentFlight().getTotalAvailableSeats());
         seatsRemainingLabel.setBounds(20, 500, 300, 25);
         add(seatsRemainingLabel);
 
@@ -134,6 +143,72 @@ public class AirlineReservationSystem extends JFrame implements ActionListener {
         flightNumberBox.addActionListener(this);
 
         setVisible(true);
+    }
+
+    private void initializeFlights() {
+        // Initialize arrays for both directions
+        greensboroToNewarkFlights = new Flight[6];
+        newarkToGreensboroFlights = new Flight[6];
+
+        // Create flights from Greensboro to Newark
+        greensboroToNewarkFlights[0] = new Flight("GSO-EWR-500", "Greensboro", "Newark",
+                "5:00 AM", "7:00 AM", 2, 1);
+        greensboroToNewarkFlights[1] = new Flight("GSO-EWR-700", "Greensboro", "Newark",
+                "7:00 AM", "9:00 AM", 2, 1);
+        greensboroToNewarkFlights[2] = new Flight("GSO-EWR-900", "Greensboro", "Newark",
+                "9:00 AM", "11:00 AM", 2, 1);
+        greensboroToNewarkFlights[3] = new Flight("GSO-EWR-1600", "Greensboro", "Newark",
+                "4:00 PM", "6:00 PM", 2, 1);
+        greensboroToNewarkFlights[4] = new Flight("GSO-EWR-1730", "Greensboro", "Newark",
+                "5:30 PM", "7:30 PM", 2, 1);
+        greensboroToNewarkFlights[5] = new Flight("GSO-EWR-1900", "Greensboro", "Newark",
+                "7:00 PM", "9:00 PM", 2, 1);
+
+        // Create flights from Newark to Greensboro
+        newarkToGreensboroFlights[0] = new Flight("EWR-GSO-500", "Newark", "Greensboro",
+                "5:00 AM", "7:00 AM", 2, 1);
+        newarkToGreensboroFlights[1] = new Flight("EWR-GSO-700", "Newark", "Greensboro",
+                "7:00 AM", "9:00 AM", 2, 1);
+        newarkToGreensboroFlights[2] = new Flight("EWR-GSO-900", "Newark", "Greensboro",
+                "9:00 AM", "11:00 AM", 2, 1);
+        newarkToGreensboroFlights[3] = new Flight("EWR-GSO-1600", "Newark", "Greensboro",
+                "4:00 PM", "6:00 PM", 2, 1);
+        newarkToGreensboroFlights[4] = new Flight("EWR-GSO-1730", "Newark", "Greensboro",
+                "5:30 PM", "7:30 PM", 2, 1);
+        newarkToGreensboroFlights[5] = new Flight("EWR-GSO-1900", "Newark", "Greensboro",
+                "7:00 PM", "9:00 PM", 2, 1);
+    }
+
+    // Modified method to get the current flight based on selected cities and time
+    private Flight getCurrentFlight() {
+        String startCity = (String) startingCityBox.getSelectedItem();
+        String destCity = (String) destinationCityBox.getSelectedItem();
+        String departureTime = (String) departureTimeBox.getSelectedItem();
+
+        Flight[] flights = startCity.equals("Greensboro") ? greensboroToNewarkFlights : newarkToGreensboroFlights;
+
+        for (Flight flight : flights) {
+            if (flight.getDepartureTime().equals(departureTime)) {
+                return flight;
+            }
+        }
+        return null;
+    }
+
+    // Modified findAlternativeFlight method to check all available times
+    private String[] findAlternativeFlights(String startCity, String destCity, String ticketClass) {
+        Flight[] flights = startCity.equals("Greensboro") ? greensboroToNewarkFlights : newarkToGreensboroFlights;
+        List<String> alternatives = new ArrayList<>();
+
+        for (Flight flight : flights) {
+            if (ticketClass.equals("Economy") && flight.getAvailableEconomySeats() > 0) {
+                alternatives.add(flight.getDepartureTime());
+            } else if (ticketClass.equals("Business") && flight.getAvailableBusinessSeats() > 0) {
+                alternatives.add(flight.getDepartureTime());
+            }
+        }
+
+        return alternatives.isEmpty() ? null : alternatives.toArray(new String[0]);
     }
 
     // Method to generate months (01 to 12)
@@ -160,16 +235,17 @@ public class AirlineReservationSystem extends JFrame implements ActionListener {
     }
 
     private void updateSeatsDisplay(Flight flight) {
-        String selectedClass = (String) classBox.getSelectedItem();
-        if (selectedClass.equals("Business")) {
-            seatsRemainingLabel.setText("Business Class Seats Available: " + flight.getAvailableBusinessSeats()
-                    + " (Economy: " + flight.getAvailableEconomySeats() + ")");
-        } else {
-            seatsRemainingLabel.setText("Economy Class Seats Available: " + flight.getAvailableEconomySeats()
-                    + " (Business: " + flight.getAvailableBusinessSeats() + ")");
+        if (flight != null) {
+            String selectedClass = (String) classBox.getSelectedItem();
+            if (selectedClass.equals("Business")) {
+                seatsRemainingLabel.setText("Business Class Seats Available: " + flight.getAvailableBusinessSeats()
+                        + " (Economy: " + flight.getAvailableEconomySeats() + ")");
+            } else {
+                seatsRemainingLabel.setText("Economy Class Seats Available: " + flight.getAvailableEconomySeats()
+                        + " (Business: " + flight.getAvailableBusinessSeats() + ")");
+            }
         }
     }
-
     @Override
     public void actionPerformed(ActionEvent e) {
         if (e.getSource() == classBox) {
@@ -180,7 +256,7 @@ public class AirlineReservationSystem extends JFrame implements ActionListener {
 
             // Update seat display when class changes
             String selectedFlight = (String) flightNumberBox.getSelectedItem();
-            Flight currentFlight = selectedFlight.equals("GOS 1") ? gos1 : gos2;
+            Flight currentFlight = selectedFlight.equals("GOS 1") ? getCurrentFlight() : getCurrentFlight();
             updateSeatsDisplay(currentFlight);
 
         } else if (e.getSource() == reserveButton) {
@@ -189,7 +265,7 @@ public class AirlineReservationSystem extends JFrame implements ActionListener {
             // Only handle route changes for relevant dropdowns
             if (e.getSource() == startingCityBox || e.getSource() == destinationCityBox || e.getSource() == flightNumberBox) {
                 String selectedFlight = (String) flightNumberBox.getSelectedItem();
-                Flight currentFlight = selectedFlight.equals("GOS 1") ? gos1 : gos2;
+                Flight currentFlight = selectedFlight.equals("GOS 1") ? getCurrentFlight() : getCurrentFlight();
                 String startCity = (String) startingCityBox.getSelectedItem();
                 String destCity = (String) destinationCityBox.getSelectedItem();
 
@@ -216,7 +292,6 @@ public class AirlineReservationSystem extends JFrame implements ActionListener {
         String customerName = customerNameField.getText();
         String startingCity = (String) startingCityBox.getSelectedItem();
         String destinationCity = (String) destinationCityBox.getSelectedItem();
-        String flightNumber = (String) flightNumberBox.getSelectedItem();
         String month = (String) monthBox.getSelectedItem();
         String day = (String) dayBox.getSelectedItem();
         String year = (String) yearBox.getSelectedItem();
@@ -228,12 +303,12 @@ public class AirlineReservationSystem extends JFrame implements ActionListener {
             return;
         }
 
-        if (!isValidRoute(flightNumber, startingCity, destinationCity)) {
-            statusLabel.setText("<html>Invalid route selected. Please check flight routes.</html>");
+        Flight flight = getCurrentFlight();
+        if (flight == null) {
+            statusLabel.setText("Invalid flight selection.");
             return;
         }
 
-        Flight flight = flightNumber.equals("GOS 1") ? gos1 : gos2;
         String departureDate = month + "/" + day + "/" + year;
 
         try {
@@ -244,26 +319,28 @@ public class AirlineReservationSystem extends JFrame implements ActionListener {
                 if (flight.getAvailableEconomySeats() > 0) {
                     flight.reserveEconomySeat();
                     ticket = new EconomyTicket(customerName, startingCity, destinationCity,
-                            flightNumber, departureDate, departureTime);
+                            flight.getFlightNumber(), departureDate, departureTime);
                     seatReserved = true;
                 } else {
-                    // Check for alternative flights with economy seats
-                    String alternativeTime = findAlternativeFlight(startingCity, destinationCity, ticketClass);
-                    if (alternativeTime != null) {
-                        throw new RuntimeException("<html>No economy seats available on this flight.<br>" +
-                                "Alternative flight available at: " + alternativeTime + "<br>" +
-                                "Please change your flight time to book.</html>");
+                    String[] alternativeTimes = findAlternativeFlights(startingCity, destinationCity, ticketClass);
+                    if (alternativeTimes != null && alternativeTimes.length > 0) {
+                        StringBuilder message = new StringBuilder("<html>No economy seats available on this flight.<br>");
+                        message.append("Alternative flights available at:<br>");
+                        for (String time : alternativeTimes) {
+                            message.append("- ").append(time).append("<br>");
+                        }
+                        message.append("Please select a different flight time to book.</html>");
+                        throw new RuntimeException(message.toString());
                     } else {
                         throw new RuntimeException("No economy seats available on any flight today. Try business class!");
                     }
                 }
             } else {
+                // Similar logic for business class...
                 if (flight.getAvailableBusinessSeats() > 0) {
                     flight.reserveBusinessSeat();
                     BusinessTicket bTicket = new BusinessTicket(customerName, startingCity, destinationCity,
-                            flightNumber, departureDate, departureTime);
-
-                    // Set business class specific options
+                            flight.getFlightNumber(), departureDate, departureTime);
                     String seatPref = (String) seatPreferenceBox.getSelectedItem();
                     String snack = (String) snackBox.getSelectedItem();
                     bTicket.setSeatPreference(seatPref);
@@ -271,12 +348,15 @@ public class AirlineReservationSystem extends JFrame implements ActionListener {
                     ticket = bTicket;
                     seatReserved = true;
                 } else {
-                    // Check for alternative flights with business seats
-                    String alternativeTime = findAlternativeFlight(startingCity, destinationCity, ticketClass);
-                    if (alternativeTime != null) {
-                        throw new RuntimeException("<html>No business seats available on this flight.<br>" +
-                                "Alternative flight available at: " + alternativeTime + "<br>" +
-                                "Please change your flight time to book.</html>");
+                    String[] alternativeTimes = findAlternativeFlights(startingCity, destinationCity, ticketClass);
+                    if (alternativeTimes != null && alternativeTimes.length > 0) {
+                        StringBuilder message = new StringBuilder("<html>No business seats available on this flight.<br>");
+                        message.append("Alternative flights available at:<br>");
+                        for (String time : alternativeTimes) {
+                            message.append("- ").append(time).append("<br>");
+                        }
+                        message.append("Please select a different flight time to book.</html>");
+                        throw new RuntimeException(message.toString());
                     } else {
                         throw new RuntimeException("No business seats available on any flight today. Try economy class!");
                     }
@@ -286,7 +366,8 @@ public class AirlineReservationSystem extends JFrame implements ActionListener {
             if (seatReserved) {
                 String info = ticket.reserveTicket() + "\n"
                         + "Departure Date: " + departureDate + "\n"
-                        + "Flight Number: " + flightNumber + "\n"
+                        + "Flight Number: " + flight.getFlightNumber() + "\n"
+                        + "Departure Time: " + departureTime + "\n"
                         + "Total Charge: $" + ticket.getPrice();
                 statusLabel.setText("<html>" + info.replaceAll("\n", "<br>") + "</html>");
                 updateSeatsDisplay(flight);
@@ -296,7 +377,6 @@ public class AirlineReservationSystem extends JFrame implements ActionListener {
             statusLabel.setText(ex.getMessage());
         }
     }
-
     /**
      * Finds an alternative flight on the same route with available seats
      * @param startCity Starting city
@@ -307,25 +387,25 @@ public class AirlineReservationSystem extends JFrame implements ActionListener {
     private String findAlternativeFlight(String startCity, String destCity, String ticketClass) {
         // Check which direction we're going
         boolean isGreensboroToNewark = startCity.equals("Greensboro") && destCity.equals("Newark");
-        Flight currentFlight = isGreensboroToNewark ? gos1 : gos2;
+        Flight currentFlight = isGreensboroToNewark ? getCurrentFlight() : getCurrentFlight();
 
         // If current flight is GOS 1 (7:00 AM), suggest GOS 2 (5:30 PM) and vice versa
         if (isGreensboroToNewark) {
-            if (gos2.getStartCity().equals(startCity) &&
-                    gos2.getEndCity().equals(destCity)) {
-                if (ticketClass.equals("Economy") && gos2.getAvailableEconomySeats() > 0) {
-                    return gos2.getDepartureTime();
-                } else if (ticketClass.equals("Business") && gos2.getAvailableBusinessSeats() > 0) {
-                    return gos2.getDepartureTime();
+            if (getCurrentFlight().getStartCity().equals(startCity) &&
+                    getCurrentFlight().getEndCity().equals(destCity)) {
+                if (ticketClass.equals("Economy") && getCurrentFlight().getAvailableEconomySeats() > 0) {
+                    return getCurrentFlight().getDepartureTime();
+                } else if (ticketClass.equals("Business") && getCurrentFlight().getAvailableBusinessSeats() > 0) {
+                    return getCurrentFlight().getDepartureTime();
                 }
             }
         } else {
-            if (gos1.getStartCity().equals(startCity) &&
-                    gos1.getEndCity().equals(destCity)) {
-                if (ticketClass.equals("Economy") && gos1.getAvailableEconomySeats() > 0) {
-                    return gos1.getDepartureTime();
-                } else if (ticketClass.equals("Business") && gos1.getAvailableBusinessSeats() > 0) {
-                    return gos1.getDepartureTime();
+            if (getCurrentFlight().getStartCity().equals(startCity) &&
+                    getCurrentFlight().getEndCity().equals(destCity)) {
+                if (ticketClass.equals("Economy") && getCurrentFlight().getAvailableEconomySeats() > 0) {
+                    return getCurrentFlight().getDepartureTime();
+                } else if (ticketClass.equals("Business") && getCurrentFlight().getAvailableBusinessSeats() > 0) {
+                    return getCurrentFlight().getDepartureTime();
                 }
             }
         }
